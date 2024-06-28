@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Formulario con Bootstrap 5</title>
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+<div class="container">
+  <h1 class="text-center my-5">Eventos</h1>
+</div>
+  <div class="modal fade" id="editarEventoModal" tabindex="-1" aria-labelledby="editarEventoModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="editarEventoModalLabel">Editar Evento</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="formularioEdicionEvento">
+            <div class="mb-3">
+              <label for="nombreEdit" class="form-label">Nombre</label>
+              <input type="text" class="form-control" id="nombreEdit" name="nombreEdit" placeholder="Ingrese su nombre">
+            </div>
+            <div class="mb-3">
+              <label for="fechaEdit" class="form-label">Fecha</label>
+              <input type="date" class="form-control" id="fechaEdit" name="fechaEdit">
+            </div>
+            <div class="mb-3">
+              <label for="precioEdit" class="form-label">Precio</label>
+              <input type="number" class="form-control" id="precioEdit" name="precioEdit" placeholder="Ingrese el precio">
+            </div>
+            <button type="submit"  class="btn btn-primary">Guardar Cambios</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+<div class="container mt-5">
+  <div class="row">
+    <!-- Formulario -->
+    <div class="col-lg-5">
+      <form action="/" id="crear" method="POST">
+        <div class="mb-3">
+          <label for="nombre" class="form-label">Nombre</label>
+          <input type="text" class="form-control" name="nombre" placeholder="Ingrese su nombre">
+        </div>
+        <div class="mb-3">
+          <label for="fecha" class="form-label">Fecha</label>
+          <input type="date" class="form-control" name="fecha">
+        </div>
+        <div class="mb-3">
+          <label for="precio" class="form-label">Precio</label>
+          <input type="number" class="form-control" name="precio" placeholder="Ingrese el precio">
+        </div>
+        <button type="submit" class="btn btn-primary">Submit</button>
+      </form>
+    </div>
+    <div class="col-lg-7">
+      <% eventos.forEach(evento => { %>
+        <div class="card mb-3" class="open-editar" >
+          <div class="card-body">
+            <h5 class="card-title"><%= evento.nombre %></h5>
+            <p class="card-text">Precio: <%= evento.precio %></p>
+            <p class="card-text">Fecha: <%= evento.fecha.toDateString() %></p>
+            <button class="btn btn-danger"  onclick="eliminarEvento('<%= evento._id %>')">Eliminar</button>
+            <button class="btn btn-primary"  onclick="abrirModalEdicion('<%= evento._id %>', '<%= evento.nombre %>', '<%= evento.fecha %>', '<%= evento.precio %>')">Editar</button>
+
+          </div>
+        </div>
+      <% }) %>
+    </div>
+    
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  function eliminarEvento(eventoId) {
+  fetch(`/evento/${eventoId}`, {
+    method: 'DELETE'
+  })
+  .then(response => {
+    if (!response.ok) {
+      throw new Error('Error al eliminar el evento');
+    }
+    return response.json();
+
+  })
+  .then(data => {
+    console.log('Evento eliminado:', data);
+    window.location.reload();
+
+  })
+  .catch(error => {
+    console.error('Error:', error);
+  });
+}
+
+function formatoFechaISO(fechaString) {
+  var fecha = new Date(fechaString);
+  var mes = (fecha.getMonth() + 1).toString().padStart(2, '0'); 
+  var dia = fecha.getDate().toString().padStart(2, '0'); 
+  return `${fecha.getFullYear()}-${mes}-${dia}`;
+}
+
+  function abrirModalEdicion(eventoId, nombre, fecha, precio) {
+
+    const fechaISO = formatoFechaISO(fecha);
+
+    document.getElementById('nombreEdit').value = nombre;
+    document.getElementById('fechaEdit').value = fechaISO;
+    document.getElementById('precioEdit').value = precio;
+
+    // Mostrar el modal de edición
+    var editarEventoModal = new bootstrap.Modal(document.getElementById('editarEventoModal'));
+    editarEventoModal.show();
+
+    document.getElementById('formularioEdicionEvento').addEventListener('submit', function(event) {
+      event.preventDefault(); 
+
+      // Obtener los valores actualizados del formulario
+      var nombreEdit = document.getElementById('nombreEdit').value;
+      var fechaEdit = document.getElementById('fechaEdit').value;
+      var precioEdit = document.getElementById('precioEdit').value;
+
+      fetch(`/evento/${eventoId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          nombre: nombreEdit,
+          fecha: fechaEdit,
+          precio: precioEdit
+        })
+      })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Error al editar el evento');
+        }
+        return response.json();
+      })
+      .then(data => {
+        console.log('Evento editado:', data);
+        window.location.reload();
+      })
+      .catch(error => {
+        console.error('Error:', error);
+      });
+    });
+  }
+</script>
+
+
+</script>
+</body>
+</html>
